@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>สถิติ</title>
+  <style>
+    /* รีเซ็ตค่าเบื้องต้น */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: sans-serif;
+    }
+
+    body {
+      background: #f7f7f7;
+      color: #333;
+    }
+
+    /* ส่วนหัว (Navbar) */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0f4a7b; /* สีน้ำเงินเข้ม */
+      color: #fff;
+      padding: 10px 20px;
+    }
+    .menu-icon {
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .nav-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    /* หัวข้อหลัก */
+    h1 {
+      text-align: center;
+      margin: 20px 0;
+      font-size: 1.8rem;
+      color: #0f4a7b;
+    }
+
+    /* ส่วนของกราฟแท่ง */
+    .chart-container {
+      width: 90%;
+      max-width: 800px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .chart-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 1.4rem;
+      color: #333;
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end; /* เรียงจากด้านล่างเพื่อให้แท่งงอกขึ้น */
+      justify-content: space-around;
+      height: 160px; /* ความสูงรวมของโซนแท่ง */
+      margin-bottom: 20px;
+    }
+    .bar-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .bar {
+      width: 30px;
+      background-color: #79bff2; /* สีแท่ง */
+      border-radius: 4px 4px 0 0;
+    }
+    .bar-label {
+      margin-top: 5px;
+      text-align: center;
+      font-size: 0.8rem;
+    }
+
+    /* ส่วนแสดงข้อมูลกล่องด้านล่าง */
+    .stats-cards {
+      width: 90%;
+      max-width: 800px;
+      margin: 20px auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      
+      
+    }
+    .card {
+        background: #D7F0FF;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        padding: 30px 20px;
+        text-align: center;
+        margin: 20px;
+    }
+
+    .card:nth-child(1) {
+        background: #7DCDFF; /* สีสำหรับการ์ดใบที่ 1 */
+    }
+
+
+
+    .card h3 {
+      margin-bottom: 10px;
+      font-size: 1rem;
+      color: #0f4a7b;
+    }
+    .card p {
+      font-size: 1.2rem;
+      color: #333333;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- แถบเมนูด้านบน -->
+  <nav>
+    <div class="menu-icon">&#9776;</div>
+    <div class="nav-title">สถิติ</div>
+  </nav>
+
+  <!-- หัวข้อหลัก -->
+  <h1>สถิติ</h1>
+
+  <!-- ส่วนของกราฟแท่ง -->
+  <div class="chart-container">
+    <h2>2024</h2>
+    <div class="bar-chart">
+      <!-- แต่ละแท่งสามารถปรับความสูง (height) ให้สอดคล้องกับข้อมูลที่ต้องการแสดง -->
+      <!-- ในตัวอย่างใช้การเทียบเป็น px แบบง่าย ๆ เช่น 105000 = 105px เป็นต้น -->
+      <div class="bar-item">
+        <div class="bar" style="height: 105px;"></div>
+        <div class="bar-label">ม.ค.<br>105,000</div>
+      </div>
+      <div class="bar-item">
+        <div class="bar" style="height: 120px;"></div>
+        <div class="bar-label">ก.พ.<br>120,000</div>
+      </div>
+      <div class="bar-item">
+        <div class="bar" style="height: 110px;"></div>
+        <div class="bar-label">มี.ค.<br>110,000</div>
+      </div>
+      <div class="bar-item">
+        <div class="bar" style="height: 133px;"></div>
+        <div class="bar-label">เม.ย.<br>133,500</div>
+      </div>
+      <div class="bar-item">
+        <div class="bar" style="height: 138px;"></div>
+        <div class="bar-label">พ.ค.<br>137,500</div>
+      </div>
+      <div class="bar-item">
+        <div class="bar" style="height: 135px;"></div>
+        <div class="bar-label">มิ.ย.<br>135,000</div>
+      </div>
+      <div class="bar-item">
+        <div class="bar" style="height: 90px;"></div>
+        <div class="bar-label">ก.ค.<br>90,000</div>
+      </div>
+      <div class="bar-item">
+        <div class="bar" style="height: 75px;"></div>
+        <div class="bar-label">ส.ค.<br>75,000</div>
+      </div>
+      <div class="bar-item">
+        <div class="bar" style="height: 70px;"></div>
+        <div class="bar-label">ก.ย.<br>70,000</div>
+      </div>
+      <div class="bar-item">
+        <div class="bar" style="height: 80px;"></div>
+        <div class="bar-label">ต.ค.<br>80,000</div>
+      </div>
+      <div class="bar-item">
+        <div class="bar" style="height: 90px;"></div>
+        <div class="bar-label">พ.ย.<br>90,000</div>
+      </div>
+      <div class="bar-item">
+        <div class="bar" style="height: 85px;"></div>
+        <div class="bar-label">ธ.ค.<br>85,000</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-cards">
+    <div class="row">
+      <div class="card">
+        <h3>จำนวนเงินทั้งหมด</h3>
+        <p>1,281,500 บาท</p>
+      </div>
+      <div class="card">
+        <h3>จำนวนคนใช้งานแอพ</h3>
+        <p>2,000 คน</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="card">
+        <h3>จำนวนเงินเงินสุทธิ</h3>
+        <p>1,000,000 บาท</p>
+      </div>
+      <div class="card">
+        <h3>จำนวนคนที่โดนระงับ</h3>
+        <p>3,765 คน</p>
+      </div>
+    </div>
+  </div>
+  
+
+</body>
+</html>
