@@ -11,8 +11,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/statistics" element={<StatisticsPage />} />
-        //<Route path="/list" element={<ListPage />} />
-        <Route path="/" element={<StatisticsPage />} />
+        <Route path="/list" element={<ListPage />} />
       </Routes>
     </Router>
   );
