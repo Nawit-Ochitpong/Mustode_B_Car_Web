@@ -1,140 +1,111 @@
 // login_page.js
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from './firebaseConfig';
+import backgroundImageLocal from './assets/background.png';
+import logoLocal from './assets/app_icon.png';
 
 const LoginPage = () => {
+  const [email, setEmail] = useState('');    
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    auth.signOut().then(() => {
+      console.log("Signed out, showing LoginPage UI.");
+    });
+  }, []);
+
+  const handleSignIn = async () => {
+    if (!email || !password) {
+      alert("Please fill out both email and password!");
+      return;
+    }
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log("User signed in successfully:", userCredential.user);
+      navigate("/statistics");
+    } catch (error) {
+      console.error("Error signing in:", error);
+      alert(error.message);
+    }
+  };
+
   return (
-    <div style={{ width: 1728, height: 1117, position: 'relative', background: 'white' }}>
-      <img
-        style={{ width: 1933, height: 1201, left: -186, top: -25, position: 'absolute' }}
-        src="https://placehold.co/1933x1201"
-        alt="background"
-      />
+    <div
+      style={{
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden', // Prevents scrollbars
+        background: `url(${backgroundImageLocal}) no-repeat center center`,
+        backgroundSize: 'cover',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
       <div
         style={{
-          width: 1742,
-          height: 1117,
-          left: -7,
-          top: 0,
-          position: 'absolute',
-          background: 'rgba(0, 0, 0, 0.50)',
-        }}
-      />
-      <div
-        style={{
-          width: 659,
-          height: 729,
-          left: 535,
-          top: 152,
-          position: 'absolute',
-          background: 'rgba(255, 255, 255, 0.90)',
-          borderRadius: 40,
-        }}
-      />
-      <div style={{ width: 389, height: 389, left: 80, top: 322, position: 'absolute' }} />
-      <img
-        style={{ width: 291, height: 234, left: 719, top: 174, position: 'absolute' }}
-        src="https://placehold.co/291x234"
-        alt="logo"
-      />
-      <div
-        style={{
-          width: 427,
-          height: 31,
-          left: 651,
-          top: 701,
-          position: 'absolute',
-          background: '#00377E',
-          boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.40)',
-          borderRadius: 19,
-          border: '1px black solid',
-        }}
-      />
-      <div
-        style={{
-          width: 60,
-          height: 26,
-          left: 834,
-          top: 704,
-          position: 'absolute',
-          color: 'white',
-          fontSize: 15,
-          fontFamily: 'IBM Plex Sans Thai Looped',
-          fontWeight: '400',
-          wordWrap: 'break-word',
-        }}
-      >
-        Sign in
-      </div>
-      <div
-        style={{
-          width: 427,
-          height: 34,
-          left: 651,
-          top: 574,
-          position: 'absolute',
-          background: 'white',
-          boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.40)',
-          borderRadius: 7,
-          border: '1px rgba(0, 0, 0, 0.20) solid',
-        }}
-      />
-      <div
-        style={{
-          width: 427,
-          height: 34,
-          left: 651,
-          top: 630,
-          position: 'absolute',
-          background: 'white',
-          boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.40)',
-          borderRadius: 7,
-          border: '1px rgba(0, 0, 0, 0.20) solid',
-        }}
-      />
-      <div
-        style={{
-          width: 252,
-          height: 53,
-          left: 739,
-          top: 464,
-          position: 'absolute',
+          width: '400px',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          borderRadius: '20px',
+          boxShadow: '0 0 20px rgba(0, 0, 0, 0.2)',
+          padding: '40px',
           textAlign: 'center',
-          color: 'black',
-          fontSize: 32,
-          fontFamily: 'IBM Plex Sans Thai Looped',
-          fontWeight: '400',
-          wordWrap: 'break-word',
         }}
       >
-        Sign in for admin
-      </div>
-      <div
-        style={{
-          left: 659,
-          top: 578,
-          position: 'absolute',
-          color: '#8F8F8F',
-          fontSize: 15,
-          fontFamily: 'IBM Plex Sans Thai Looped',
-          fontWeight: '400',
-          wordWrap: 'break-word',
-        }}
-      >
-        Username
-      </div>
-      <div
-        style={{
-          left: 659,
-          top: 634,
-          position: 'absolute',
-          color: '#8F8F8F',
-          fontSize: 15,
-          fontFamily: 'IBM Plex Sans Thai Looped',
-          fontWeight: '400',
-          wordWrap: 'break-word',
-        }}
-      >
-        Password
+        <img
+          src={logoLocal}
+          alt="App Logo"
+          style={{ width: '150px', marginBottom: '20px' }}
+        />
+        <h2 style={{ marginBottom: '20px', color: '#333', fontSize: '24px' }}>
+          Sign in for admin
+        </h2>
+        <div style={{ marginBottom: '20px' }}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              marginBottom: '10px',
+              borderRadius: '5px',
+              border: '1px solid #ccc',
+              fontSize: '16px',
+            }}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '5px',
+              border: '1px solid #ccc',
+              fontSize: '16px',
+            }}
+          />
+        </div>
+        <button
+          onClick={handleSignIn}
+          style={{
+            backgroundColor: '#00377E',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px',
+            padding: '10px 20px',
+            cursor: 'pointer',
+            fontSize: '16px',
+          }}
+        >
+          Sign in
+        </button>
       </div>
     </div>
   );
