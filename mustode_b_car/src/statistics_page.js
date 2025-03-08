@@ -5,33 +5,29 @@ import { db } from './firebaseConfig';
 import { useNavigate } from 'react-router-dom';
 import './App.css';
 
-// Function to scale monthly data based on the selected year relative to baseYear (2024)
 const scaleMonthlyData = (data, selectedYear) => {
   const baseYear = 2024;
-  const factor = selectedYear < baseYear ? Math.pow(0.9, (baseYear - selectedYear)) : 1;
+  const factor = selectedYear < baseYear ? Math.pow(0.9, baseYear - selectedYear) : 1;
   return data.map(item => ({ ...item, value: Math.round(item.value * factor) }));
 };
 
 const StatisticsPage = () => {
-  // Define categories:
-  // income: Total income for the year (รายได้)
-  // expenses: Total expenses for the year (ค่าใช้จ่าย)
-  // users: Total number of app users for the year (จำนวนผู้ใช้งานแอพ)
-  // banned_car: Total number of suspended vehicles (จำนวนรถที่โดนระงับ)
   const categories = ['income', 'expenses', 'users', 'banned_car'];
   const [selectedCategory, setSelectedCategory] = useState('income');
-
-  // Year state: default to 2024; future years are disabled.
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(2024);
-
-  // Firebase data state
   const [firebaseData, setFirebaseData] = useState(null);
-
-  // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   const navigate = useNavigate();
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const handleLogout = () => {
+    console.log('Logging out...');
+    navigate('/login');
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -53,7 +49,6 @@ const StatisticsPage = () => {
     fetchData();
   }, [year]);
 
-  // Fallback sample data for 2024
   const sampleData = {
     income: [
       { month: 'ม.ค.', value: 125000 },
@@ -113,34 +108,29 @@ const StatisticsPage = () => {
     ],
   };
 
-  // Use Firebase data if available; otherwise, fallback to sampleData.
   const baseMonthlyDataByCategory = firebaseData || sampleData;
 
-  // Scale monthly data for the selected year
   const monthlyDataByCategoryScaled = {};
   categories.forEach(cat => {
     monthlyDataByCategoryScaled[cat] = scaleMonthlyData(baseMonthlyDataByCategory[cat], year);
   });
 
-  // Compute totals for each category
   const totals = {};
   categories.forEach(cat => {
     totals[cat] = monthlyDataByCategoryScaled[cat].reduce((acc, cur) => acc + cur.value, 0);
   });
 
-  // For the bar chart, use the monthly data for the selected category.
   const monthlyData = monthlyDataByCategoryScaled[selectedCategory];
   const maxMonthlyValue = Math.max(...monthlyData.map(item => item.value));
 
-  // Unit and Label functions
-  const getUnit = cat => {
+  const getUnit = (cat) => {
     if (cat === 'income' || cat === 'expenses') return ' บาท';
     if (cat === 'users') return ' คน';
     if (cat === 'banned_car') return ' คัน';
     return '';
   };
 
-  const getLabel = cat => {
+  const getLabel = (cat) => {
     if (cat === 'income') return 'รายได้';
     if (cat === 'expenses') return 'ค่าใช้จ่าย';
     if (cat === 'users') return 'จำนวนผู้ใช้งานแอพ';
@@ -148,58 +138,98 @@ const StatisticsPage = () => {
     return '';
   };
 
-  // Logout function (for sidepage "ออกจากระบบ")
-  const handleLogout = () => {
-    // Here you can add your logout logic (e.g., firebase auth signOut)
-    // Then navigate to the login page:
-    navigate('/login');
-  };
-
   return (
     <div style={{ width: '100vw', height: '100vh', background: '#f4f4f4', position: 'relative' }}>
       {/* Top Bar */}
-      <div
-        style={{
-          backgroundColor: '#00377E',
-          color: 'white',
-          padding: '10px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'relative',
-          zIndex: 2,
-        }}
-      >
-        {/* Hamburger Icon to open sidebar */}
-        <div style={{ cursor: 'pointer' }}>
-          <span style={{ fontSize: '24px', marginRight: '8px' }} onClick={() => setSidebarOpen(true)}>
-            ☰
-          </span>
+      <div style={{ backgroundColor: '#00377E', color: 'white', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 2 }}>
+        <div style={{ cursor: 'pointer' }} onClick={toggleSidebar}>
+          <span style={{ fontSize: '24px', marginRight: '8px' }}>☰</span>
         </div>
         <h1 style={{ margin: 0, fontSize: '24px' }}>สถิติ</h1>
         <div />
       </div>
 
-      {/* Year Navigation and Main Content */}
+      {/* Sidebar */}
+      {sidebarOpen && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              backgroundColor: 'rgba(0,0,0,0.4)',
+              zIndex: 5,
+            }}
+            onClick={toggleSidebar}
+          />
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '250px',
+              height: '100vh',
+              backgroundColor: '#00377E',
+              color: 'white',
+              padding: '20px',
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              boxShadow: '2px 0px 10px rgba(0,0,0,0.2)',
+              transition: 'left 0.3s ease',
+              zIndex: 6,
+              overflowY: 'auto',
+            }}
+          >
+            <div>
+              <button
+                onClick={toggleSidebar}
+                style={{ color: 'white', fontSize: '20px', border: 'none', background: 'none', cursor: 'pointer' }}
+              >
+                ✖
+              </button>
+              <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                <div style={{ width: '60px', height: '60px', backgroundColor: '#fff', borderRadius: '50%', margin: 'auto' }}></div>
+                <p>admin#1234</p>
+              </div>
+              <div style={{ marginTop: '20px' }}>
+                <p style={{ cursor: 'pointer' }} onClick={() => { navigate('/statistics'); toggleSidebar(); }}>
+                  📊 สถิติ
+                </p>
+                <p style={{ cursor: 'pointer' }} onClick={() => { navigate('/list'); toggleSidebar(); }}>
+                  📋 รายชื่อ
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              style={{
+                backgroundColor: 'red',
+                color: 'white',
+                border: '2px solid red',
+                padding: '10px',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                width: '100%',
+                position: 'sticky',
+                bottom: 0,
+              }}
+            >
+              ออกจากระบบ
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Main Content */}
       <div style={{ padding: '20px' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '20px',
-            margin: '20px 0',
-          }}
-        >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', margin: '20px 0' }}>
           <button
             onClick={() => setYear(year - 1)}
-            style={{
-              border: 'none',
-              background: 'none',
-              cursor: 'pointer',
-              fontSize: '24px',
-              color: '#00377E',
-            }}
+            style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '24px', color: '#00377E' }}
           >
             ◀
           </button>
@@ -207,19 +237,12 @@ const StatisticsPage = () => {
           <button
             onClick={() => setYear(year < currentYear ? year + 1 : year)}
             disabled={year >= currentYear}
-            style={{
-              border: 'none',
-              background: 'none',
-              cursor: year >= currentYear ? 'not-allowed' : 'pointer',
-              fontSize: '24px',
-              color: year >= currentYear ? '#ccc' : '#00377E',
-            }}
+            style={{ border: 'none', background: 'none', cursor: year >= currentYear ? 'not-allowed' : 'pointer', fontSize: '24px', color: year >= currentYear ? '#ccc' : '#00377E' }}
           >
             ▶
           </button>
         </div>
 
-        {/* Bar Chart */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '40px' }}>
           {monthlyData.map((item, index) => {
             const barHeight = Math.round((item.value / maxMonthlyValue) * 150);
@@ -228,23 +251,8 @@ const StatisticsPage = () => {
                 <div style={{ marginBottom: '5px', fontSize: '14px', color: '#333' }}>
                   {item.value.toLocaleString()}
                 </div>
-                <div
-                  style={{
-                    height: '150px',
-                    display: 'flex',
-                    alignItems: 'flex-end',
-                    justifyContent: 'center',
-                    marginBottom: '5px',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '100%',
-                      height: `${barHeight}px`,
-                      background: '#4DA6FF',
-                      borderRadius: '4px 4px 0 0',
-                    }}
-                  />
+                <div style={{ height: '150px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: '5px' }}>
+                  <div style={{ width: '100%', height: `${barHeight}px`, background: '#4DA6FF', borderRadius: '4px 4px 0 0' }}></div>
                 </div>
                 <div style={{ fontSize: '14px', color: '#333' }}>{item.month}</div>
               </div>
@@ -252,7 +260,6 @@ const StatisticsPage = () => {
           })}
         </div>
 
-        {/* Statistic Boxes (2×2 Grid) Centered */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', width: 'fit-content' }}>
             {categories.map(cat => (
@@ -282,97 +289,6 @@ const StatisticsPage = () => {
             ))}
           </div>
         </div>
-      </div>
-
-      {/* Overlay (only visible if sidebarOpen) */}
-      {sidebarOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'rgba(0,0,0,0.4)',
-            zIndex: 5,
-          }}
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: sidebarOpen ? 0 : '-250px', // Slide in/out
-          width: '250px',
-          height: '100vh',
-          backgroundColor: '#fff',
-          boxShadow: '2px 0 5px rgba(0,0,0,0.2)',
-          transition: 'left 0.3s ease',
-          zIndex: 6,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        {/* Sidebar Header with burger icon to close */}
-        <div
-          style={{
-            backgroundColor: '#00377E',
-            color: '#fff',
-            padding: '20px',
-            fontSize: '18px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <span>เมนู</span>
-          <span style={{ fontSize: '24px', cursor: 'pointer' }} onClick={() => setSidebarOpen(false)}>
-            ☰
-          </span>
-        </div>
-
-        {/* Sidebar Content */}
-        <div style={{ flex: 1, padding: '20px' }}>
-          <div
-            style={{ marginBottom: '20px', cursor: 'pointer' }}
-            onClick={() => {
-              navigate('/statistics');
-              setSidebarOpen(false);
-            }}
-          >
-            <span style={{ fontSize: '18px' }}>สถิติ</span>
-          </div>
-          <div
-            style={{ marginBottom: '20px', cursor: 'pointer' }}
-            onClick={() => {
-              navigate('/list');
-              setSidebarOpen(false);
-            }}
-          >
-            <span style={{ fontSize: '18px' }}>รายชื่อ</span>
-          </div>
-        </div>
-
-        {/* Sidebar Footer: Logout Button */}
-        <button
-          onClick={() => {
-            navigate('/login');
-            setSidebarOpen(false);
-          }}
-          style={{
-            backgroundColor: '#FF4F4F',
-            color: '#fff',
-            border: 'none',
-            padding: '15px',
-            cursor: 'pointer',
-            fontSize: '16px',
-          }}
-        >
-          ออกจากระบบ
-        </button>
       </div>
     </div>
   );

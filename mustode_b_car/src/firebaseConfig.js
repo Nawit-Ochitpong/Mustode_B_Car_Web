@@ -14,17 +14,9 @@ const firebaseConfig = {
   measurementId: "G-BT22K761KZ"
 };
 
-// Initialize Firebase app
 const app = initializeApp(firebaseConfig);
-
-// Initialize Firestore and Auth
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// (Optional) If you use Analytics, you can import and initialize it here as well:
-// import { getAnalytics } from 'firebase/analytics';
-// const analytics = getAnalytics(app);
-
-// Export the necessary services
 export { auth, db };
 export default app;

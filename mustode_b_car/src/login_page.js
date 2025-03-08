@@ -37,7 +37,7 @@ const LoginPage = () => {
       style={{
         width: '100vw',
         height: '100vh',
-        overflow: 'hidden', // Prevents scrollbars
+        overflow: 'hidden',
         background: `url(${backgroundImageLocal}) no-repeat center center`,
         backgroundSize: 'cover',
         display: 'flex',
