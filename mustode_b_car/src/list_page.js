@@ -7,11 +7,11 @@ import './App.css';
 
 // Fallback sample data สำหรับทดสอบ (ถ้า Firestore ว่าง)
 const sampleAccountData = [
-  { id: 'acc1',  name: 'Account Sample 1',  status: 'ปลดระงับ' },
-  { id: 'acc2',  name: 'Account Sample 2',  status: 'ระงับ' },
-  { id: 'acc3',  name: 'Account Sample 3',  status: 'ปลดระงับ' },
-  { id: 'acc4',  name: 'Account Sample 4',  status: 'ระงับ' },
-  { id: 'acc5',  name: 'Account Sample 5',  status: 'ปลดระงับ' },
+  { id: 'acc1', name: 'Account Sample 1', status: 'ปลดระงับ' },
+  { id: 'acc2', name: 'Account Sample 2', status: 'ระงับ' },
+  { id: 'acc3', name: 'Account Sample 3', status: 'ปลดระงับ' },
+  { id: 'acc4', name: 'Account Sample 4', status: 'ระงับ' },
+  { id: 'acc5', name: 'Account Sample 5', status: 'ปลดระงับ' },
 ];
 
 const sampleCheckData = [
@@ -32,6 +32,17 @@ const ListPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('ทั้งหมด');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // เพิ่ม state สำหรับช่วงวันที่ (2 สัปดาห์)
+  const [startDate, setStartDate] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const today = new Date();
+    today.setDate(today.getDate() + 13);
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  });
 
   // States สำหรับเก็บข้อมูลจาก Firestore
   const [accountDocs, setAccountDocs] = useState([]);
@@ -54,21 +65,21 @@ const ListPage = () => {
     const fetchData = async () => {
       try {
         // ดึง accountDocs
-        const accountSnapshot = await getDocs(collection(db, "accountDocs"));
+        const accountSnapshot = await getDocs(collection(db, 'accountDocs'));
         const accountData = accountSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setAccountDocs(accountData.length > 0 ? accountData : sampleAccountData);
 
         // ดึง checkDocs
-        const checkSnapshot = await getDocs(collection(db, "checkDocs"));
+        const checkSnapshot = await getDocs(collection(db, 'checkDocs'));
         const checkData = checkSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setCheckDocs(checkData.length > 0 ? checkData : sampleCheckData);
 
         // ดึง transactions
-        const transactionSnapshot = await getDocs(collection(db, "transactions"));
+        const transactionSnapshot = await getDocs(collection(db, 'transactions'));
         const transactionData = transactionSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setTransactions(transactionData.length > 0 ? transactionData : sampleTransactionData);
       } catch (error) {
-        console.error("Error fetching data from Firebase:", error);
+        console.error('Error fetching data from Firebase:', error);
         // ใช้ fallback sample data ถ้ามีข้อผิดพลาด
         setAccountDocs(sampleAccountData);
         setCheckDocs(sampleCheckData);
@@ -80,16 +91,16 @@ const ListPage = () => {
 
   // ฟังก์ชันกรองข้อมูลตาม searchTerm
   const filterBySearch = (data) => {
-    return data.filter(item =>
-      item.name && item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    return data.filter(
+      item => item.name && item.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
   // กำหนดตัวเลือก filter สำหรับแต่ละแท็บ
   const filterOptions =
     activeTab === 'transactions'
-      ? ["ทั้งหมด", "จ่ายแล้ว", "ยังไม่จ่าย"]
-      : ["ทั้งหมด", "ปลดระงับ", "ระงับ"];
+      ? ['ทั้งหมด', 'จ่ายแล้ว', 'ยังไม่จ่าย']
+      : ['ทั้งหมด', 'ปลดระงับ', 'ระงับ'];
 
   // เลือกข้อมูลสำหรับแต่ละแท็บ โดยเพิ่มการกรองด้วยสถานะในแท็บที่ไม่ใช่ transactions
   let dataToDisplay = [];
@@ -124,7 +135,6 @@ const ListPage = () => {
 
   const toggleStatus = async (docId, currentStatus) => {
     const newStatus = getToggledStatus(currentStatus);
-
     try {
       await updateDoc(doc(db, activeTab, docId), { status: newStatus });
       // อัปเดต state ให้สอดคล้องกับการเปลี่ยนแปลง
@@ -136,9 +146,46 @@ const ListPage = () => {
         setTransactions(prev => prev.map(item => item.id === docId ? { ...item, status: newStatus } : item));
       }
     } catch (error) {
-      console.error("Error updating status:", error);
-      alert("เกิดข้อผิดพลาดในการเปลี่ยนสถานะ");
+      console.error('Error updating status:', error);
+      alert('เกิดข้อผิดพลาดในการเปลี่ยนสถานะ');
     }
+  };
+
+  // ฟังก์ชันช่วย format วันที่เป็น dd/mm/yyyy
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // ฟังก์ชันเลื่อนช่วงวันที่ไป 2 สัปดาห์ ก่อนหน้า
+  const handlePrevious = () => {
+    setStartDate(prev => {
+      const newStart = new Date(prev);
+      newStart.setDate(newStart.getDate() - 14);
+      return newStart;
+    });
+    setEndDate(prev => {
+      const newEnd = new Date(prev);
+      newEnd.setDate(newEnd.getDate() - 14);
+      return newEnd;
+    });
+  };
+
+  // ฟังก์ชันเลื่อนช่วงวันที่ไป 2 สัปดาห์ ถัดไป
+  const handleNext = () => {
+    setStartDate(prev => {
+      const newStart = new Date(prev);
+      newStart.setDate(newStart.getDate() + 14);
+      return newStart;
+    });
+    setEndDate(prev => {
+      const newEnd = new Date(prev);
+      newEnd.setDate(newEnd.getDate() + 14);
+      return newEnd;
+    });
   };
 
   return (
@@ -195,8 +242,6 @@ const ListPage = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                position: 'relative',
-                zIndex: 2,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -210,7 +255,7 @@ const ListPage = () => {
                   fontSize: '20px',
                   border: 'none',
                   background: 'none',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
               >
                 ☰
@@ -247,7 +292,7 @@ const ListPage = () => {
 
       {/* Tabs */}
       <div style={{ display: 'flex', width: '100%', borderTop: '1px solid #ccc' }}>
-        <div 
+        <div
           onClick={() => { setActiveTab('accountDocs'); setFilterStatus('ทั้งหมด'); }}
           style={{
             flex: 1,
@@ -255,12 +300,12 @@ const ListPage = () => {
             textAlign: 'center',
             cursor: 'pointer',
             backgroundColor: activeTab === 'accountDocs' ? '#D7F0FF' : '#7DCDFF',
-            borderRight: '1px solid #ccc'
+            borderRight: '1px solid #ccc',
           }}
         >
           ตรวจสอบเอกสารบัญชี
         </div>
-        <div 
+        <div
           onClick={() => { setActiveTab('checkDocs'); setFilterStatus('ทั้งหมด'); }}
           style={{
             flex: 1,
@@ -268,19 +313,19 @@ const ListPage = () => {
             textAlign: 'center',
             cursor: 'pointer',
             backgroundColor: activeTab === 'checkDocs' ? '#D7F0FF' : '#7DCDFF',
-            borderRight: '1px solid #ccc'
+            borderRight: '1px solid #ccc',
           }}
         >
           ตรวจสอบเอกสารรถ
         </div>
-        <div 
+        <div
           onClick={() => { setActiveTab('transactions'); setFilterStatus('ทั้งหมด'); }}
           style={{
             flex: 1,
             padding: '12px 0',
             textAlign: 'center',
             cursor: 'pointer',
-            backgroundColor: activeTab === 'transactions' ? '#D7F0FF' : '#7DCDFF'
+            backgroundColor: activeTab === 'transactions' ? '#D7F0FF' : '#7DCDFF',
           }}
         >
           การทำธุรกรรม
@@ -299,7 +344,7 @@ const ListPage = () => {
             padding: '8px',
             fontSize: '16px',
             borderRadius: '5px',
-            border: '1px solid #ccc'
+            border: '1px solid #ccc',
           }}
         />
       </div>
@@ -313,7 +358,9 @@ const ListPage = () => {
             style={{ padding: '5px', fontSize: '16px', marginBottom: '10px' }}
           >
             {filterOptions.map((option, idx) => (
-              <option key={idx} value={option}>{option}</option>
+              <option key={idx} value={option}>
+                {option}
+              </option>
             ))}
           </select>
         </div>
@@ -322,11 +369,26 @@ const ListPage = () => {
       {/* ส่วนพิเศษของแท็บ "การทำธุรกรรม" (Transactions) */}
       {activeTab === 'transactions' && (
         <>
-          {/* ส่วน "วันที่" */}
-          <div style={{ paddingLeft: '20px', paddingRight: '20px', marginBottom: '10px' }}>
+          {/* ส่วน "วันที่" พร้อมปุ่มลูกศรซ้าย/ขวา */}
+          <div
+            style={{
+              paddingLeft: '20px',
+              paddingRight: '20px',
+              marginBottom: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <button onClick={handlePrevious} style={{ marginRight: '10px',border: 'none'}}>
+            ◀
+            </button>
             <p style={{ margin: 0, fontSize: '14px' }}>
-              วันที่ xx/xx/xxxx - xx/xx/xxxx
+              วันที่ {formatDate(startDate)} - {formatDate(endDate)}
             </p>
+            <button onClick={handleNext} style={{ marginLeft: '10px',border: 'none' }}>
+             ▶
+            </button>
           </div>
 
           {/* ส่วน statistic box */}
@@ -337,7 +399,7 @@ const ListPage = () => {
                 backgroundColor: '#D7EFFF',
                 borderRadius: '10px',
                 padding: '20px',
-                textAlign: 'center'
+                textAlign: 'center',
               }}
             >
               <p style={{ margin: 0 }}>ยอดรวมกำไรเข้าบริษัท</p>
@@ -349,7 +411,7 @@ const ListPage = () => {
                 backgroundColor: '#D7EFFF',
                 borderRadius: '10px',
                 padding: '20px',
-                textAlign: 'center'
+                textAlign: 'center',
               }}
             >
               <p style={{ margin: 0 }}>ยอดรวมที่ยังไม่ได้จ่าย</p>
@@ -365,7 +427,9 @@ const ListPage = () => {
               style={{ padding: '5px', fontSize: '16px', marginBottom: '10px' }}
             >
               {filterOptions.map((option, idx) => (
-                <option key={idx} value={option}>{option}</option>
+                <option key={idx} value={option}>
+                  {option}
+                </option>
               ))}
             </select>
           </div>
@@ -383,6 +447,7 @@ const ListPage = () => {
                   <span>{item.name}</span>
                 </td>
                 <td style={{ padding: '10px', width: '120px' }}>
+                  {/* ปุ่มสำหรับเปลี่ยนสถานะ */}
                   <button
                     onClick={() => toggleStatus(item.id, item.status)}
                     style={{
@@ -396,7 +461,7 @@ const ListPage = () => {
                       padding: '6px 12px',
                       border: 'none',
                       borderRadius: '5px',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
                     }}
                   >
                     {item.status}
