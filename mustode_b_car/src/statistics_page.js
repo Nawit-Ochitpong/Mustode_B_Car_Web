@@ -241,7 +241,7 @@ const StatisticsPage = () => {
                     style={{
                       width: '100%',
                       height: `${barHeight}px`,
-                      background: '#4DA6FF',
+                      background: '#7DCDFF',
                       borderRadius: '4px 4px 0 0',
                     }}
                   />
@@ -260,7 +260,7 @@ const StatisticsPage = () => {
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 style={{
-                  backgroundColor: selectedCategory === cat ? '#00377E' : '#D2E4FA',
+                  backgroundColor: selectedCategory === cat ? '#7DCDFF' : '#D7F0FF',
                   borderRadius: '10px',
                   width: '250px',
                   height: '120px',
@@ -272,10 +272,10 @@ const StatisticsPage = () => {
                   transition: 'background-color 0.3s',
                 }}
               >
-                <h3 style={{ margin: 0, fontSize: '18px', color: selectedCategory === cat ? '#fff' : '#333' }}>
+                <h3 style={{ margin: 0, fontSize: '18px', color: selectedCategory === cat ? '#333' : '#333' }}>
                   {getLabel(cat)}
                 </h3>
-                <p style={{ margin: '10px 0 0', fontSize: '20px', color: selectedCategory === cat ? '#fff' : '#333' }}>
+                <p style={{ margin: '10px 0 0', fontSize: '20px', color: selectedCategory === cat ? '#333' : '#333' }}>
                   {totals[cat].toLocaleString() + getUnit(cat)}
                 </p>
               </div>
@@ -328,11 +328,16 @@ const StatisticsPage = () => {
             justifyContent: 'space-between',
           }}
         >
-          <span>เมนู</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px' }}>
+            <div style={{ width: '60px', height: '60px', backgroundColor: '#fff', borderRadius: '50%' }}></div>
+            <p style={{ marginLeft: '10px' }}>admin#1234</p>
+          </div>
           <span style={{ fontSize: '24px', cursor: 'pointer' }} onClick={() => setSidebarOpen(false)}>
             ☰
           </span>
         </div>
+
+        
 
         {/* Sidebar Content */}
         <div style={{ flex: 1, padding: '20px' }}>
@@ -343,7 +348,7 @@ const StatisticsPage = () => {
               setSidebarOpen(false);
             }}
           >
-            <span style={{ fontSize: '18px' }}>สถิติ</span>
+            <span style={{ fontSize: '18px' }}>📊 สถิติ</span>
           </div>
           <div
             style={{ marginBottom: '20px', cursor: 'pointer' }}
@@ -352,7 +357,7 @@ const StatisticsPage = () => {
               setSidebarOpen(false);
             }}
           >
-            <span style={{ fontSize: '18px' }}>รายชื่อ</span>
+            <span style={{ fontSize: '18px' }}>📋 รายชื่อ</span>
           </div>
         </div>
 
