@@ -150,8 +150,6 @@ const StatisticsPage = () => {
 
   // Logout function (for sidepage "ออกจากระบบ")
   const handleLogout = () => {
-    // Here you can add your logout logic (e.g., firebase auth signOut)
-    // Then navigate to the login page:
     navigate('/login');
   };
 
@@ -219,65 +217,93 @@ const StatisticsPage = () => {
           </button>
         </div>
 
-        {/* Bar Chart */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '40px' }}>
-          {monthlyData.map((item, index) => {
-            const barHeight = Math.round((item.value / maxMonthlyValue) * 150);
-            return (
-              <div key={index} style={{ textAlign: 'center', width: '40px' }}>
-                <div style={{ marginBottom: '5px', fontSize: '14px', color: '#333' }}>
-                  {item.value.toLocaleString()}
-                </div>
-                <div
-                  style={{
-                    height: '150px',
-                    display: 'flex',
-                    alignItems: 'flex-end',
-                    justifyContent: 'center',
-                    marginBottom: '5px',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '100%',
-                      height: `${barHeight}px`,
-                      background: '#7DCDFF',
-                      borderRadius: '4px 4px 0 0',
-                    }}
-                  />
-                </div>
-                <div style={{ fontSize: '14px', color: '#333' }}>{item.month}</div>
+     {/* Bar Chart */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'center', // ทำให้กราฟอยู่ตรงกลาง
+          marginBottom: '80px',
+          width: '80%', // ปรับขนาดให้พอดีกับจอ
+          height: '350px', // เพิ่มความสูงของ container ของกราฟ
+          padding: '0 20px', // เพิ่ม padding ซ้ายขวาให้ดูสมดุล
+          margin: 'auto', // จัดให้อยู่ตรงกลาง
+        }}
+      >
+        {monthlyData.map((item, index) => {
+          const barHeight = Math.round((item.value / maxMonthlyValue) * 300); // เพิ่มขนาดกราฟ
+          return (
+            <div
+              key={index}
+              style={{
+                textAlign: 'center',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                transition: 'all 0.5s ease-in-out', // ทำให้กราฟเปลี่ยนขนาดอย่าง smooth
+              }}
+            >
+              <div style={{ marginBottom: '5px', fontSize: '14px', color: '#333' }}>
+                {item.value.toLocaleString()}
               </div>
-            );
-          })}
-        </div>
-
-        {/* Statistic Boxes (2×2 Grid) Centered */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', width: 'fit-content' }}>
-            {categories.map(cat => (
               <div
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
                 style={{
-                  backgroundColor: selectedCategory === cat ? '#7DCDFF' : '#D7F0FF',
-                  borderRadius: '10px',
-                  width: '250px',
-                  height: '120px',
+                  height: '300px', // เพิ่มความสูงของ container ที่ถือแท่งกราฟ
                   display: 'flex',
-                  flexDirection: 'column',
+                  alignItems: 'flex-end',
                   justifyContent: 'center',
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.3s',
+                  width: '100%', // ให้ความกว้างเต็มพื้นที่
                 }}
               >
-                <h3 style={{ margin: 0, fontSize: '18px', color: selectedCategory === cat ? '#333' : '#333' }}>
-                  {getLabel(cat)}
-                </h3>
-                <p style={{ margin: '10px 0 0', fontSize: '20px', color: selectedCategory === cat ? '#333' : '#333' }}>
-                  {totals[cat].toLocaleString() + getUnit(cat)}
-                </p>
+                <div
+                  style={{
+                    width: '60%', // ปรับขนาดของแต่ละแท่งให้สมดุล
+                    height: `${barHeight}px`,
+                    background: 'linear-gradient(to top, #4A90E2, #7DCDFF)', // เพิ่มความ smooth ด้วย gradient
+                    borderRadius: '8px 8px 0 0', // เพิ่มความโค้งมนให้ดู smooth
+                    transition: 'height 0.5s ease-in-out', // ทำให้ความสูงของกราฟเปลี่ยนอย่างลื่นไหล
+                  }}
+                />
+              </div>
+              <div style={{ fontSize: '14px', color: '#333' }}>{item.month}</div>
+            </div>
+          );
+        })}
+      </div>
+
+
+
+        {/* Statistic Boxes (2×2 Grid) Centered */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '40px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '40px', width: 'fit-content' }}>
+          {categories.map(cat => (
+        <div
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            style={{
+              backgroundColor: selectedCategory === cat ? '#7DCDFF' : '#D7F0FF',
+              borderRadius: '12px',
+              width: '220px', // เพิ่มขนาดความกว้างของกล่อง
+              height: '100px', // เพิ่มขนาดความสูงของกล่อง
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              cursor: 'pointer',
+              transition: 'background-color 0.3s, transform 0.2s ease-in-out',
+              padding: '20px', // เพิ่ม Padding ให้เนื้อหาด้านในดูไม่แออัด
+              boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)', // เพิ่มเงาให้ดูมิติขึ้น
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'} // Effect Hover ขยายเล็กน้อย
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '20px', color: '#333' }}>
+              {getLabel(cat)}
+            </h3>
+            <p style={{ margin: '0', fontSize: '22px', fontWeight: 'normal', color: '#333' }}>
+              {totals[cat].toLocaleString() + getUnit(cat)}
+            </p>
               </div>
             ))}
           </div>
@@ -336,8 +362,6 @@ const StatisticsPage = () => {
             ☰
           </span>
         </div>
-
-        
 
         {/* Sidebar Content */}
         <div style={{ flex: 1, padding: '20px' }}>
