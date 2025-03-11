@@ -9,11 +9,17 @@ import './App.css';
 const sampleAccountData = [
   { id: 'acc1', name: 'Account Sample 1', status: 'ปลดระงับ' },
   { id: 'acc2', name: 'Account Sample 2', status: 'ระงับ' },
+  { id: 'acc3', name: 'Account Sample 3', status: 'ปลดระงับ' },
+  { id: 'acc4', name: 'Account Sample 4', status: 'ระงับ' },
+  { id: 'acc5', name: 'Account Sample 5', status: 'ปลดระงับ' },
 ];
 
 const sampleCheckData = [
   { id: 'chk1', name: 'Check Sample 1', status: 'ปลดระงับ' },
   { id: 'chk2', name: 'Check Sample 2', status: 'ระงับ' },
+  { id: 'chk3', name: 'Check Sample 3', status: 'ระงับ' },
+  { id: 'chk4', name: 'Check Sample 4', status: 'ปลดระงับ' },
+  { id: 'chk5', name: 'Check Sample 5', status: 'ระงับ' },
 ];
 
 const sampleTransactionData = [
@@ -26,6 +32,17 @@ const ListPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('ทั้งหมด');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // เพิ่ม state สำหรับช่วงวันที่ (2 สัปดาห์)
+  const [startDate, setStartDate] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const today = new Date();
+    today.setDate(today.getDate() + 13);
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  });
 
   // States สำหรับเก็บข้อมูลจาก Firestore
   const [accountDocs, setAccountDocs] = useState([]);
@@ -79,6 +96,12 @@ const ListPage = () => {
     );
   };
 
+  // กำหนดตัวเลือก filter สำหรับแต่ละแท็บ
+  const filterOptions =
+    activeTab === 'transactions'
+      ? ['ทั้งหมด', 'จ่ายแล้ว', 'ยังไม่จ่าย']
+      : ['ทั้งหมด', 'ปลดระงับ', 'ระงับ'];
+
   // เลือกข้อมูลสำหรับแต่ละแท็บ
   let dataToDisplay = [];
   if (activeTab === 'accountDocs') {
@@ -125,6 +148,43 @@ const ListPage = () => {
     }
   };
 
+  // ฟังก์ชันช่วย format วันที่เป็น dd/mm/yyyy
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // ฟังก์ชันเลื่อนช่วงวันที่ไป 2 สัปดาห์ ก่อนหน้า
+  const handlePrevious = () => {
+    setStartDate(prev => {
+      const newStart = new Date(prev);
+      newStart.setDate(newStart.getDate() - 14);
+      return newStart;
+    });
+    setEndDate(prev => {
+      const newEnd = new Date(prev);
+      newEnd.setDate(newEnd.getDate() - 14);
+      return newEnd;
+    });
+  };
+
+  // ฟังก์ชันเลื่อนช่วงวันที่ไป 2 สัปดาห์ ถัดไป
+  const handleNext = () => {
+    setStartDate(prev => {
+      const newStart = new Date(prev);
+      newStart.setDate(newStart.getDate() + 14);
+      return newStart;
+    });
+    setEndDate(prev => {
+      const newEnd = new Date(prev);
+      newEnd.setDate(newEnd.getDate() + 14);
+      return newEnd;
+    });
+  };
+
   return (
     <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
@@ -159,51 +219,66 @@ const ListPage = () => {
               left: 0,
               width: '250px',
               height: '100vh',
-              backgroundColor: '#00377E',
-              color: 'white',
-              padding: '20px',
+              backgroundColor: '#fff',
+              color: '#000',
               boxSizing: 'border-box',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
               boxShadow: '2px 0px 10px rgba(0,0,0,0.2)',
               transition: 'left 0.3s ease',
               zIndex: 6,
               overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
-            <div>
+            {/* Top Bar - แถบด้านบนสีน้ำเงิน พร้อมปุ่ม ☰ ที่มุมขวา */}
+            <div
+              style={{
+                backgroundColor: '#00377E',
+                color: '#fff',
+                padding: '30px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ width: '60px', height: '60px', backgroundColor: '#fff', borderRadius: '50%' }}></div>
+                <p style={{ fontSize: '18px',marginLeft: '10px' }}>admin#1234</p>
+              </div>
               <button
                 onClick={toggleMenu}
-                style={{ color: 'white', fontSize: '20px', border: 'none', background: 'none', cursor: 'pointer' }}
+                style={{
+                  color: '#fff',
+                  fontSize: '20px',
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                }}
               >
-                ✖
+                ☰
               </button>
-              <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                <div style={{ width: '60px', height: '60px', backgroundColor: '#fff', borderRadius: '50%', margin: 'auto' }}></div>
-                <p>admin#1234</p>
-              </div>
-              <div style={{ marginTop: '20px' }}>
-                <p style={{ cursor: 'pointer' }} onClick={() => { navigate('/statistics'); toggleMenu(); }}>
-                  📊 สถิติ
-                </p>
-                <p style={{ cursor: 'pointer' }} onClick={() => { navigate('/list'); toggleMenu(); }}>
-                  📋 รายชื่อ
-                </p>
-              </div>
             </div>
+
+            {/* เนื้อหาหลักของ Sidebar */}
+            <div style={{ flex: 1, padding: '20px' }}>
+              <p style={{ fontSize: '18px',cursor: 'pointer' }} onClick={() => { navigate('/statistics'); toggleMenu(); }}>
+                📊 สถิติ
+              </p>
+              <p style={{ fontSize: '18px',cursor: 'pointer' }} onClick={() => { navigate('/list'); toggleMenu(); }}>
+                📋 รายชื่อ
+              </p>
+            </div>
+
+            {/* ปุ่มออกจากระบบ */}
             <button
               onClick={handleLogout}
               style={{
-                backgroundColor: 'red',
-                color: 'white',
-                border: '2px solid red',
-                padding: '10px',
-                borderRadius: '10px',
+                backgroundColor: '#FF4F4F',
+                color: '#fff',
+                border: 'none',
+                padding: '15px',
                 cursor: 'pointer',
-                width: '100%',
-                position: 'sticky',
-                bottom: 0,
+                fontSize: '16px',
               }}
             >
               ออกจากระบบ
@@ -271,14 +346,46 @@ const ListPage = () => {
         />
       </div>
 
+      {/* Filter Dropdown สำหรับแท็บ เอกสารบัญชีและเอกสารรถ ให้อยู่ใต้ช่องค้นหา */}
+      {(activeTab === 'accountDocs' || activeTab === 'checkDocs') && (
+        <div style={{ padding: '0 20px', textAlign: 'right' }}>
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            style={{ padding: '5px', fontSize: '16px', marginBottom: '10px' }}
+          >
+            {filterOptions.map((option, idx) => (
+              <option key={idx} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* ส่วนพิเศษของแท็บ "การทำธุรกรรม" (Transactions) */}
       {activeTab === 'transactions' && (
         <>
-          {/* ส่วน "วันที่" */}
-          <div style={{ paddingLeft: '20px', paddingRight: '20px', marginBottom: '10px' }}>
+          {/* ส่วน "วันที่" พร้อมปุ่มลูกศรซ้าย/ขวา */}
+          <div
+            style={{
+              paddingLeft: '20px',
+              paddingRight: '20px',
+              marginBottom: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <button onClick={handlePrevious} style={{ marginRight: '10px',border: 'none'}}>
+            ◀
+            </button>
             <p style={{ margin: 0, fontSize: '14px' }}>
-              วันที่ xx/xx/xxxx - xx/xx/xxxx
+              วันที่ {formatDate(startDate)} - {formatDate(endDate)}
             </p>
+            <button onClick={handleNext} style={{ marginLeft: '10px',border: 'none' }}>
+             ▶
+            </button>
           </div>
 
           {/* ส่วน statistic box */}
