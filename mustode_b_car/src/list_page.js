@@ -1,4 +1,3 @@
-// list_page.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
@@ -7,24 +6,24 @@ import './App.css';
 
 // Fallback sample data สำหรับทดสอบ (ถ้า Firestore ว่าง)
 const sampleAccountData = [
-  { id: 'acc1', name: 'Account Sample 1', status: 'ปลดระงับ' },
-  { id: 'acc2', name: 'Account Sample 2', status: 'ระงับ' },
-  { id: 'acc3', name: 'Account Sample 3', status: 'ปลดระงับ' },
-  { id: 'acc4', name: 'Account Sample 4', status: 'ระงับ' },
-  { id: 'acc5', name: 'Account Sample 5', status: 'ปลดระงับ' },
+  { id: 'acc1', username: 'Account Sample 1', status: 'ปลดระงับ' },
+  { id: 'acc2', username: 'Account Sample 2', status: 'ระงับ' },
+  { id: 'acc3', username: 'Account Sample 3', status: 'ปลดระงับ' },
+  { id: 'acc4', username: 'Account Sample 4', status: 'ระงับ' },
+  { id: 'acc5', username: 'Account Sample 5', status: 'ปลดระงับ' },
 ];
 
 const sampleCheckData = [
-  { id: 'chk1', name: 'Check Sample 1', status: 'ปลดระงับ' },
-  { id: 'chk2', name: 'Check Sample 2', status: 'ระงับ' },
-  { id: 'chk3', name: 'Check Sample 3', status: 'ระงับ' },
-  { id: 'chk4', name: 'Check Sample 4', status: 'ปลดระงับ' },
-  { id: 'chk5', name: 'Check Sample 5', status: 'ระงับ' },
+  { id: 'chk1', username: 'Check Sample 1', status: 'ปลดระงับ' },
+  { id: 'chk2', username: 'Check Sample 2', status: 'ระงับ' },
+  { id: 'chk3', username: 'Check Sample 3', status: 'ระงับ' },
+  { id: 'chk4', username: 'Check Sample 4', status: 'ปลดระงับ' },
+  { id: 'chk5', username: 'Check Sample 5', status: 'ระงับ' },
 ];
 
 const sampleTransactionData = [
-  { id: 'trx1', name: 'Transaction Sample 1', status: 'จ่ายแล้ว' },
-  { id: 'trx2', name: 'Transaction Sample 2', status: 'ยังไม่จ่าย' },
+  { id: 'trx1', username: 'Transaction Sample 1', status: 'จ่ายแล้ว' },
+  { id: 'trx2', username: 'Transaction Sample 2', status: 'ยังไม่จ่าย' },
 ];
 
 const ListPage = () => {
@@ -33,9 +32,7 @@ const ListPage = () => {
   const [filterStatus, setFilterStatus] = useState('ทั้งหมด');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // เปลี่ยน initial state สำหรับช่วงวันที่ (สำหรับแท็บ transactions)
-  // endDate จะถูกตั้งเป็นวันปัจจุบัน
-  // startDate จะถูกตั้งเป็น 1 เดือนก่อนวันปัจจุบัน
+  // กำหนดค่าเริ่มต้นของช่วงวันที่ (สำหรับแท็บ transactions)
   const [endDate, setEndDate] = useState(() => {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -67,19 +64,24 @@ const ListPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // ดึง accountDocs
-        const accountSnapshot = await getDocs(collection(db, "accountDocs"));
+        console.log("Connecting to Firebase and fetching data...");
+
+        // ดึง accountDocs จากคอลเลกชัน "users"
+        const accountSnapshot = await getDocs(collection(db, "users"));
         const accountData = accountSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log("Fetched account data:", accountData);
         setAccountDocs(accountData.length > 0 ? accountData : sampleAccountData);
 
         // ดึง checkDocs
         const checkSnapshot = await getDocs(collection(db, "checkDocs"));
         const checkData = checkSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log("Fetched checkDocs data:", checkData);
         setCheckDocs(checkData.length > 0 ? checkData : sampleCheckData);
 
         // ดึง transactions
         const transactionSnapshot = await getDocs(collection(db, "transactions"));
         const transactionData = transactionSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log("Fetched transactions data:", transactionData);
         setTransactions(transactionData.length > 0 ? transactionData : sampleTransactionData);
       } catch (error) {
         console.error("Error fetching data from Firebase:", error);
@@ -95,8 +97,18 @@ const ListPage = () => {
   // ฟังก์ชันกรองข้อมูลตาม searchTerm
   const filterBySearch = (data) => {
     return data.filter(item =>
-      item.name && item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      item.username && item.username.toLowerCase().includes(searchTerm.toLowerCase())
     );
+  };
+
+  // ฟังก์ชันสำหรับสุ่มสีจากชื่อ
+  const generateRandomColor = (username) => {
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+      hash = username.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = `#${((hash >> 8) & 0x00FFFFFF).toString(16).padStart(6, '0')}`;
+    return color;
   };
 
   // กำหนดตัวเลือก filter สำหรับแต่ละแท็บ
@@ -105,7 +117,7 @@ const ListPage = () => {
       ? ['ทั้งหมด', 'จ่ายแล้ว', 'ยังไม่จ่าย']
       : ['ทั้งหมด', 'ปลดระงับ', 'ระงับ'];
 
-  // เลือกข้อมูลสำหรับแต่ละแท็บ (แก้ไขส่วนนี้เพื่อให้ dropdown filter ทำงาน)
+  // เลือกข้อมูลสำหรับแต่ละแท็บ
   let dataToDisplay = [];
   if (activeTab === 'accountDocs') {
     const filteredByStatus = filterStatus === 'ทั้งหมด'
@@ -125,10 +137,6 @@ const ListPage = () => {
   }
 
   // ฟังก์ชันสลับสถานะ (Toggle Status)
-  // ถ้าเป็น "ระงับ" => "ปลดระงับ"
-  // ถ้าเป็น "ปลดระงับ" => "ระงับ"
-  // ถ้าเป็น "จ่ายแล้ว" => "ยังไม่จ่าย"
-  // ถ้าเป็น "ยังไม่จ่าย" => "จ่ายแล้ว"
   const getToggledStatus = (currentStatus) => {
     if (currentStatus === 'ระงับ') return 'ปลดระงับ';
     if (currentStatus === 'ปลดระงับ') return 'ระงับ';
@@ -141,6 +149,7 @@ const ListPage = () => {
     const newStatus = getToggledStatus(currentStatus);
 
     try {
+      // ใช้ชื่อคอลเลกชันตามแท็บ
       await updateDoc(doc(db, activeTab, docId), { status: newStatus });
       // อัปเดต state ให้สอดคล้องกับการเปลี่ยนแปลง
       if (activeTab === 'accountDocs') {
@@ -176,7 +185,6 @@ const ListPage = () => {
   };
 
   // ฟังก์ชันเลื่อนช่วงวันที่ไป 1 เดือน ถัดไป
-  // หากช่วงวันที่ใหม่ (newEnd) มากกว่าวันปัจจุบัน จะไม่เลื่อน
   const handleNext = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -352,7 +360,7 @@ const ListPage = () => {
         />
       </div>
 
-      {/* Filter Dropdown สำหรับแท็บ เอกสารบัญชีและเอกสารรถ ให้อยู่ใต้ช่องค้นหา */}
+      {/* Filter Dropdown สำหรับแท็บ เอกสารบัญชีและเอกสารรถ */}
       {(activeTab === 'accountDocs' || activeTab === 'checkDocs') && (
         <div style={{ padding: '0 20px', textAlign: 'right' }}>
           <select
@@ -444,11 +452,21 @@ const ListPage = () => {
             {dataToDisplay.map((item, idx) => (
               <tr key={idx} style={{ borderBottom: '1px solid #ccc' }}>
                 <td style={{ padding: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ width: '32px', height: '32px', backgroundColor: '#ccc', borderRadius: '50%' }}></div>
-                  <span>{item.name}</span>
+                  {/* รูปโปรไฟล์จะอยู่ด้านซ้าย */}
+                  <img
+                    src={item.image && item.image.id_card ? item.image.id_card : 'https://via.placeholder.com/50/cccccc/ffffff?text=No+Image'}
+                    alt="Profile"
+                    style={{
+                      width: '50px',
+                      height: '50px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      backgroundColor: item.image && item.image.id_card ? 'transparent' : generateRandomColor(item.username)
+                    }}
+                  />
+                  <span>{item.username}</span>
                 </td>
                 <td style={{ padding: '10px', width: '120px' }}>
-                  {/* ปุ่มสำหรับเปลี่ยนสถานะ */}
                   <button
                     onClick={() => toggleStatus(item.id, item.status)}
                     style={{

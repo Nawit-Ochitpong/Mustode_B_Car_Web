@@ -1,8 +1,7 @@
-// detail_page.js
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from './firebaseConfig';
+import { db } from './firebaseConfig'; // <-- ไฟล์ config ของ Firebase
 import './App.css';
 
 const DetailPage = () => {
@@ -12,70 +11,119 @@ const DetailPage = () => {
   const [docData, setDocData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // useEffect สำหรับดึงข้อมูลจาก Firestore
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const docRef = doc(db, tabType, docId);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          setDocData(docSnap.data());
-        } else {
-          console.log("No such document!");
-          // fallback sample data
-          if (tabType === 'accountDocs') {
+        if (tabType === 'accountDocs') {
+          const docRef = doc(db, 'users', docId);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setDocData({
+              name: data.username || "N/A",
+              address: data.address || "N/A",
+              phone: data.phone || "N/A",
+              email: data.email || "N/A",
+              docLease: data.rental_contract || "N/A",
+              docRegis: data.id_card || "N/A",
+              docLicense: data.driving_license || "N/A",
+              imageUrl: data.image || "",
+              status: data.status || "N/A",
+            });
+          } else {
+            console.log("ไม่พบข้อมูลผู้ใช้ใน collection 'users' ที่มี docId =", docId);
             setDocData({
               name: "ตัวอย่างข้อมูลบัญชี",
-              status: "ไม่พบข้อมูล",
               address: "N/A",
               phone: "N/A",
               email: "N/A",
               docLease: "N/A",
               docRegis: "N/A",
               docLicense: "N/A",
-            });
-          } else if (tabType === 'checkDocs') {
-            setDocData({
-              name: "Toyota Vios",
-              carModel: "1.5 G",
-              year: "2020",
-              gearType: "อัตโนมัติ",
-              status: "ไม่พบข้อมูล",
-              docCarReg: "N/A",
-              docInsurance: "N/A",
-              docLicense: "N/A",
               imageUrl: "",
+              status: "ไม่พบข้อมูล"
             });
-          } else if (tabType === 'transactions') {
-            setDocData({
-              name: "Toyota Vios 9000 x 2 วัน",
-              status: "ไม่พบข้อมูล",
-              startDate: "xx/xx/xxxx",
-              endDate: "xx/xx/xxxx",
-              price: 9000,
-              dayCount: 2,
-              deposit: 0,
-              total: 18000,
-              serviceFee: 10, // สมมติเป็น %
-              note: "N/A",
-            });
+          }
+        } else {
+          const collectionName = (tabType === 'accountDocs') ? 'users' : tabType;
+          const docRef = doc(db, collectionName, docId);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            if (tabType === 'checkDocs') {
+              setDocData({
+                name: docSnap.data().name || "N/A",
+                carModel: docSnap.data().carModel || "N/A",
+                year: docSnap.data().year || "N/A",
+                gearType: docSnap.data().gearType || "N/A",
+                status: docSnap.data().status || "N/A",
+                docCarReg: docSnap.data().docCarReg || "N/A",
+                docInsurance: docSnap.data().docInsurance || "N/A",
+                docLicense: docSnap.data().docLicense || "N/A",
+                imageUrl: docSnap.data().imageUrl || "",
+              });
+            } else if (tabType === 'transactions') {
+              setDocData({
+                name: docSnap.data().name || "N/A",
+                status: docSnap.data().status || "N/A",
+                startDate: docSnap.data().startDate || "",
+                endDate: docSnap.data().endDate || "",
+                price: docSnap.data().price || 0,
+                dayCount: docSnap.data().dayCount || 0,
+                deposit: docSnap.data().deposit || 0,
+                total: docSnap.data().total || 0,
+                serviceFee: docSnap.data().serviceFee || 10,
+                note: docSnap.data().note || "N/A",
+              });
+            } else {
+              setDocData(docSnap.data());
+            }
           } else {
-            setDocData({ name: "No Data", status: "No Data" });
+            console.log("No such document!");
+            if (tabType === 'checkDocs') {
+              setDocData({
+                name: "Toyota Vios",
+                carModel: "1.5 G",
+                year: "2020",
+                gearType: "อัตโนมัติ",
+                status: "ไม่พบข้อมูล",
+                docCarReg: "N/A",
+                docInsurance: "N/A",
+                docLicense: "N/A",
+                imageUrl: "",
+              });
+            } else if (tabType === 'transactions') {
+              setDocData({
+                name: "Toyota Vios 9000 x 2 วัน",
+                status: "ไม่พบข้อมูล",
+                startDate: "xx/xx/xxxx",
+                endDate: "xx/xx/xxxx",
+                price: 9000,
+                dayCount: 2,
+                deposit: 0,
+                total: 18000,
+                serviceFee: 10,
+                note: "N/A",
+              });
+            } else {
+              setDocData({ name: "No Data", status: "No Data" });
+            }
           }
         }
       } catch (error) {
         console.error("Error fetching detail:", error);
-        // fallback ข้อมูลกรณีเกิดข้อผิดพลาด
         if (tabType === 'accountDocs') {
           setDocData({
             name: "Error",
-            status: "Error",
             address: "N/A",
             phone: "N/A",
             email: "N/A",
             docLease: "N/A",
             docRegis: "N/A",
             docLicense: "N/A",
+            imageUrl: "",
+            status: "Error"
           });
         } else if (tabType === 'checkDocs') {
           setDocData({
@@ -117,7 +165,6 @@ const DetailPage = () => {
     return <div style={{ padding: '20px' }}>กำลังโหลดข้อมูล...</div>;
   }
 
-  // เลือก Render ตาม tabType
   if (tabType === 'accountDocs') {
     return (
       <div style={{ width: '100vw', minHeight: '100vh', background: '#f4f4f4' }}>
@@ -146,7 +193,6 @@ const DetailPage = () => {
       </div>
     );
   } else {
-    // กรณีเป็นแท็บอื่น
     return (
       <div style={{ padding: '20px' }}>
         <h3>ยังไม่ได้ออกแบบสำหรับ tabType: {tabType}</h3>
@@ -156,16 +202,31 @@ const DetailPage = () => {
   }
 };
 
-// -------------------
-// Header component เล็กๆ
-// -------------------
+// ----------------------------------------
+// ฟังก์ชันสำหรับจัดรูปแบบ Array ให้เป็น
+// {
+//   "ตะเคียนเตี้ย",
+//   "20150",
+//   "ชลบุรี",
+//   null,
+//   "บางละมุง"
+// }
+// ----------------------------------------
+function formatArrayAsBraced(arrayData) {
+  // map แต่ละ item ให้เป็น "  " + JSON.stringify(item) + "," + \n
+  // แล้วครอบด้วย { และ }
+  // เช่น {  "abc", "def", null }
+  const lines = arrayData.map(item => `  ${JSON.stringify(item)},`);
+  return `{\n${lines.join("\n")}\n}`;
+}
+
+// ----------------------------------------
+// Header (ส่วนบนของหน้า)
+// ----------------------------------------
 const Header = ({ navigate }) => {
   return (
     <div style={{ backgroundColor: '#00377E', color: 'white', padding: '10px 20px', display: 'flex', alignItems: 'center' }}>
-      <span
-        style={{ cursor: 'pointer', marginRight: '10px' }}
-        onClick={() => navigate(-1)}
-      >
+      <span style={{ cursor: 'pointer', marginRight: '10px' }} onClick={() => navigate(-1)}>
         ◀
       </span>
       <h2 style={{ margin: 0 }}>รายละเอียด</h2>
@@ -173,14 +234,9 @@ const Header = ({ navigate }) => {
   );
 };
 
-// -------------------
-// 1) Layout สำหรับ accountDocs
-// -------------------
 const AccountDocsDetail = ({ docId, tabType, data }) => {
-  // state สำหรับ popup
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-  const isSuspended = data.status === 'ระงับ'; 
+  const isSuspended = data.status === 'ระงับ';
   const suspendButtonText = isSuspended ? 'ปลดระงับ' : 'ระงับ';
 
   const handleSuspendToggle = async () => {
@@ -195,12 +251,9 @@ const AccountDocsDetail = ({ docId, tabType, data }) => {
     }
   };
 
-  // กดปุ่มบันทึก => เปิด Popup
   const handleSave = () => {
     setShowConfirmModal(true);
   };
-
-  // ปุ่มใน Popup
   const handleCancel = () => {
     setShowConfirmModal(false);
   };
@@ -209,9 +262,20 @@ const AccountDocsDetail = ({ docId, tabType, data }) => {
     setShowConfirmModal(false);
   };
 
+  // ถ้า address เป็น array => formatArrayAsBraced
+  // ถ้า address เป็น object => JSON.stringify
+  // ถ้า address เป็น string => แสดง string ตามปกติ
+  let addressDisplay = data.address;
+  if (Array.isArray(data.address)) {
+    // แสดงผลในรูปแบบ { "xx", "yy", null }
+    addressDisplay = formatArrayAsBraced(data.address);
+  } else if (typeof data.address === 'object' && data.address !== null) {
+    // กรณีเป็น object ปกติ (ไม่ใช่ array)
+    addressDisplay = JSON.stringify(data.address, null, 2);
+  }
+
   return (
     <div style={containerStyle}>
-      {/* ปุ่ม “ระงับ/ปลดระงับ” */}
       <button
         onClick={handleSuspendToggle}
         style={{
@@ -222,17 +286,17 @@ const AccountDocsDetail = ({ docId, tabType, data }) => {
         {suspendButtonText}
       </button>
 
-      {/* 2 คอลัมน์ */}
       <div style={columnContainerStyle}>
-        {/* ซ้าย */}
         <div style={leftColumnStyle}>
           <InputField label="ชื่อ" value={data.name} />
-          <InputField label="ที่อยู่" value={data.address} />
+
+          {/* ใช้ addressDisplay ที่ผ่านการ format แล้ว */}
+          <InputField label="ที่อยู่" value={addressDisplay} />
+
           <InputField label="เบอร์โทรศัพท์" value={data.phone} />
           <InputField label="อีเมล" value={data.email} />
         </div>
 
-        {/* ขวา */}
         <div style={rightColumnStyle}>
           <InputField label="สัญญาเช่าซื้อ" value={data.docLease} />
           <InputField label="รูปใบประกอบ" value={data.docRegis} />
@@ -240,32 +304,22 @@ const AccountDocsDetail = ({ docId, tabType, data }) => {
         </div>
       </div>
 
-      {/* ปุ่มบันทึก */}
       <div style={saveButtonContainerStyle}>
         <button onClick={handleSave} style={saveButtonStyle}>
           บันทึก
         </button>
       </div>
 
-      {/* Popup ยืนยันบันทึก */}
       {showConfirmModal && (
-        <ConfirmationModal
-          onCancel={handleCancel}
-          onConfirm={handleConfirm}
-        />
+        <ConfirmationModal onCancel={handleCancel} onConfirm={handleConfirm} />
       )}
     </div>
   );
 };
 
-// -------------------
-// 2) Layout สำหรับ checkDocs (รถ)
-// -------------------
 const CheckDocsDetail = ({ docId, tabType, data }) => {
-  // state สำหรับ popup
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-  const isSuspended = data.status === 'ระงับ'; 
+  const isSuspended = data.status === 'ระงับ';
   const suspendButtonText = isSuspended ? 'ปลดระงับ' : 'ระงับ';
 
   const handleSuspendToggle = async () => {
@@ -280,12 +334,9 @@ const CheckDocsDetail = ({ docId, tabType, data }) => {
     }
   };
 
-  // กดปุ่มบันทึก => เปิด Popup
   const handleSave = () => {
     setShowConfirmModal(true);
   };
-
-  // ปุ่มใน Popup
   const handleCancel = () => {
     setShowConfirmModal(false);
   };
@@ -307,9 +358,7 @@ const CheckDocsDetail = ({ docId, tabType, data }) => {
       </button>
 
       <div style={columnContainerStyle}>
-        {/* ซ้าย */}
         <div style={leftColumnStyle}>
-          {/* รูปภาพรถ */}
           <label style={labelStyle}>รูปภาพ</label>
           {data.imageUrl ? (
             <img
@@ -331,14 +380,12 @@ const CheckDocsDetail = ({ docId, tabType, data }) => {
               style={inputStyle}
             />
           )}
-
           <InputField label="ชื่อรถ" value={data.name} />
           <InputField label="รุ่น" value={data.carModel} />
           <InputField label="ปี" value={data.year} />
           <InputField label="ระบบเกียร์" value={data.gearType} />
         </div>
 
-        {/* ขวา */}
         <div style={rightColumnStyle}>
           <InputField label="เลขทะเบียน / เอกสารรถ" value={data.docCarReg} />
           <InputField label="พ.ร.บ. / ประกัน" value={data.docInsurance} />
@@ -352,25 +399,16 @@ const CheckDocsDetail = ({ docId, tabType, data }) => {
         </button>
       </div>
 
-      {/* Popup ยืนยันบันทึก */}
       {showConfirmModal && (
-        <ConfirmationModal
-          onCancel={handleCancel}
-          onConfirm={handleConfirm}
-        />
+        <ConfirmationModal onCancel={handleCancel} onConfirm={handleConfirm} />
       )}
     </div>
   );
 };
 
-// -------------------
-// 3) Layout สำหรับ transactions
-// -------------------
 const TransactionDetail = ({ docId, tabType, data }) => {
-  // state สำหรับ popup การชำระเงิน
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-
-  const isSuspended = data.status === 'ระงับ'; 
+  const isSuspended = data.status === 'ระงับ';
   const suspendButtonText = isSuspended ? 'ปลดระงับ' : 'ระงับ';
 
   const handleSuspendToggle = async () => {
@@ -378,32 +416,24 @@ const TransactionDetail = ({ docId, tabType, data }) => {
       const newStatus = isSuspended ? 'ปลดระงับ' : 'ระงับ';
       await updateDoc(doc(db, tabType, docId), { status: newStatus });
       alert(`อัปเดตสถานะเป็น "${newStatus}" แล้ว`);
-      data.status = newStatus; 
+      data.status = newStatus;
     } catch (error) {
       console.error("Error updating status:", error);
       alert("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
     }
   };
 
-  // ฟังก์ชันเมื่อกดปุ่ม "ชำระเงิน" => เปิด Popup การชำระเงิน
   const handlePaymentClick = () => {
     setShowPaymentModal(true);
   };
-
-  // ปิด Popup การชำระเงิน
   const handleClosePayment = () => {
     setShowPaymentModal(false);
   };
-
-  // เมื่อกดปุ่มยืนยันการชำระเงิน
   const handleConfirmPayment = async () => {
     try {
-      // อัปเดตสถานะใน Firestore เป็น "ชำระแล้ว"
       await updateDoc(doc(db, tabType, docId), { status: "ชำระแล้ว" });
-      // อัปเดตค่าในตัวแปร data (เพื่อให้ UI แสดงสถานะใหม่ทันที)
       data.status = "ชำระแล้ว";
       alert("ชำระเงินเรียบร้อย");
-      // ปิด Popup
       setShowPaymentModal(false);
     } catch (error) {
       console.error("Error updating status:", error);
@@ -411,17 +441,13 @@ const TransactionDetail = ({ docId, tabType, data }) => {
     }
   };
 
-  // สมมติคำนวณค่าเช่าทั้งหมด
   const pricePerDay = data.price || 0;
   const days = data.dayCount || 1;
-  const deposit = data.deposit || 0;          // มีในข้อมูล แต่ไม่ได้ใช้ใน Popup
-  const serviceFeePercent = data.serviceFee || 10; 
-  const totalRent = pricePerDay * days;       // ค่าเช่ารถ
-  const serviceFeeValue = (totalRent * serviceFeePercent) / 100; // กำไร
-  // เดิม grandTotal = totalRent + serviceFeeValue - deposit 
-  // แต่ใน Popup ต้องการแสดง "กำไร + ค่าเช่ารถ = ยอดชำระทั้งหมด"
-  // จึงจะไม่หัก deposit ตรงนี้ (หรือปรับตามความต้องการจริง)
-  const grandTotal = totalRent + serviceFeeValue; // ยอดชำระทั้งหมด (ไม่รวม deposit)
+  const deposit = data.deposit || 0; 
+  const serviceFeePercent = data.serviceFee || 10;
+  const totalRent = pricePerDay * days;
+  const serviceFeeValue = (totalRent * serviceFeePercent) / 100;
+  const grandTotal = totalRent + serviceFeeValue;
 
   return (
     <div style={containerStyle}>
@@ -449,12 +475,10 @@ const TransactionDetail = ({ docId, tabType, data }) => {
             <p style={{ margin: 0 }}>
               วันที่: {data.startDate} - {data.endDate}
             </p>
-            {/* ตัวอย่าง: แสดงสถานะปัจจุบัน */}
             <p style={{ margin: 0 }}>
               <strong>สถานะ:</strong> {data.status || '-'}
             </p>
           </div>
-          {/* ปุ่มระงับซ้ำ (ซ่อนไว้) */}
           <button
             style={{
               backgroundColor: isSuspended ? 'green' : 'red',
@@ -464,14 +488,13 @@ const TransactionDetail = ({ docId, tabType, data }) => {
               padding: '10px 20px',
               cursor: 'pointer',
               fontSize: '16px',
-              visibility: 'hidden', 
+              visibility: 'hidden',
             }}
           >
             ระงับ
           </button>
         </div>
 
-        {/* ตัวอย่างแสดงค่าต่าง ๆ */}
         <div style={{ 
           backgroundColor: '#f9f9f9', 
           padding: '15px', 
@@ -493,14 +516,12 @@ const TransactionDetail = ({ docId, tabType, data }) => {
         </div>
       </div>
 
-      {/* ปุ่ม "ชำระเงิน" */}
       <div style={saveButtonContainerStyle}>
         <button onClick={handlePaymentClick} style={saveButtonStyle}>
           ชำระเงิน
         </button>
       </div>
 
-      {/* Popup การชำระเงิน (QR Code) */}
       {showPaymentModal && (
         <PaymentModal
           onClose={handleClosePayment}
@@ -513,20 +534,13 @@ const TransactionDetail = ({ docId, tabType, data }) => {
   );
 };
 
-/** Popup ยืนยันการบันทึก (ใช้ในแท็บ accountDocs/checkDocs) */
 const ConfirmationModal = ({ onCancel, onConfirm }) => {
   return (
     <>
       <div style={overlayStyle} />
       <div style={modalStyle}>
-        <p style={{ fontSize: '16px', marginBottom: '20px' }}>
-          ยืนยันผลบันทึกและตรวจสอบ
-        </p>
-        <div style={{ 
-          display: 'flex', 
-          gap: '20px', 
-          justifyContent: 'center' 
-        }}>
+        <p style={{ fontSize: '16px', marginBottom: '20px' }}>ยืนยันผลบันทึกและตรวจสอบ</p>
+        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
           <button
             onClick={onCancel}
             style={{
@@ -561,27 +575,19 @@ const ConfirmationModal = ({ onCancel, onConfirm }) => {
   );
 };
 
-/** Popup การชำระเงินแบบใหม่ (QR Code) */
 const PaymentModal = ({ onClose, totalRent, profit, onConfirm }) => {
-  // ตาม requirement: "กำไร + ค่าเช่ารถ = ยอดชำระทั้งหมด"
   const totalAmount = totalRent + profit;
 
   return (
     <>
-      {/* ฉากหลังสีดำโปร่งแสง */}
       <div style={paymentOverlayStyle}></div>
-
-      {/* กล่อง Popup ขาว ตรงกลาง */}
       <div style={paymentModalStyle}>
         <h2 style={paymentModalTitleStyle}>ชำระเงิน</h2>
-
-        {/* QR Code (ใส่ลิงก์จริงได้ตามต้องการ) */}
         <img
-          src="https://via.placeholder.com/150?text=QR+Code"
+          src="assets/pngimg.com - qr_code_PNG33.png"
           alt="QR Code"
           style={qrCodeStyle}
         />
-
         <div style={paymentInfoContainerStyle}>
           <div style={paymentRowStyle}>
             <span>ค่าเช่ารถ</span>
@@ -594,25 +600,12 @@ const PaymentModal = ({ onClose, totalRent, profit, onConfirm }) => {
           <hr style={{ margin: '10px 0' }} />
           <div style={paymentRowStyle}>
             <span>ยอดชำระทั้งหมด</span>
-            <span style={{ color: 'red' }}>
-              {totalAmount.toLocaleString()} บาท
-            </span>
+            <span style={{ color: 'red' }}>{totalAmount.toLocaleString()} บาท</span>
           </div>
         </div>
-
         <div style={paymentButtonContainerStyle}>
-          <button 
-            onClick={onClose} 
-            style={paymentCancelButtonStyle}
-          >
-            ยกเลิก
-          </button>
-          <button 
-            onClick={onConfirm} 
-            style={paymentConfirmButtonStyle}
-          >
-            ชำระเงิน
-          </button>
+          <button onClick={onClose} style={paymentCancelButtonStyle}>ยกเลิก</button>
+          <button onClick={onConfirm} style={paymentConfirmButtonStyle}>ชำระเงิน</button>
         </div>
       </div>
     </>
@@ -621,9 +614,9 @@ const PaymentModal = ({ onClose, totalRent, profit, onConfirm }) => {
 
 export default DetailPage;
 
-//
-// ส่วนสไตล์/โค้ดซ้ำๆ ทำให้กระชับ
-//
+// --------------------------------------------------
+// ส่วนสไตล์ (ไม่แก้ไข UI/Logic)
+// --------------------------------------------------
 const containerStyle = {
   backgroundColor: '#fff',
   padding: '20px',
@@ -676,6 +669,10 @@ const inputStyle = {
   borderRadius: '5px',
   border: '1px solid #ccc',
   marginBottom: '15px',
+  // รองรับการแสดงหลายบรรทัด
+  whiteSpace: 'pre-wrap',
+  overflowWrap: 'break-word',
+  height: 'auto',
 };
 
 const saveButtonContainerStyle = {
@@ -716,16 +713,13 @@ const modalStyle = {
   textAlign: 'center',
 };
 
-//
-// สไตล์สำหรับ PaymentModal (ชำระเงิน)
-//
 const paymentOverlayStyle = {
   position: 'fixed',
   top: 0,
   left: 0,
   width: '100vw',
   height: '100vh',
-  backgroundColor: 'rgba(0, 0, 0, 0.8)', // ฉากหลังสีดำโปร่งแสงเข้ม
+  backgroundColor: 'rgba(0, 0, 0, 0.8)',
   zIndex: 9999,
 };
 
@@ -798,9 +792,9 @@ const paymentConfirmButtonStyle = {
   fontSize: '16px',
 };
 
-//
-// helper component สำหรับช่อง input readOnly
-//
+// --------------------------------------------------
+// InputField (readOnly)
+// --------------------------------------------------
 const InputField = ({ label, value }) => {
   return (
     <div>
