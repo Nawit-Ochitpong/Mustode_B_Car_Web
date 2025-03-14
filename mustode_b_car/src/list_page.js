@@ -33,15 +33,18 @@ const ListPage = () => {
   const [filterStatus, setFilterStatus] = useState('ทั้งหมด');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // เพิ่ม state สำหรับช่วงวันที่ (2 สัปดาห์)
-  const [startDate, setStartDate] = useState(() => {
+  // เปลี่ยน initial state สำหรับช่วงวันที่ (สำหรับแท็บ transactions)
+  // endDate จะถูกตั้งเป็นวันปัจจุบัน
+  // startDate จะถูกตั้งเป็น 1 เดือนก่อนวันปัจจุบัน
+  const [endDate, setEndDate] = useState(() => {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), today.getDate());
   });
-  const [endDate, setEndDate] = useState(() => {
+  const [startDate, setStartDate] = useState(() => {
     const today = new Date();
-    today.setDate(today.getDate() + 13);
-    return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const oneMonthAgo = new Date(today);
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    return new Date(oneMonthAgo.getFullYear(), oneMonthAgo.getMonth(), oneMonthAgo.getDate());
   });
 
   // States สำหรับเก็บข้อมูลจาก Firestore
@@ -102,17 +105,22 @@ const ListPage = () => {
       ? ['ทั้งหมด', 'จ่ายแล้ว', 'ยังไม่จ่าย']
       : ['ทั้งหมด', 'ปลดระงับ', 'ระงับ'];
 
-  // เลือกข้อมูลสำหรับแต่ละแท็บ
+  // เลือกข้อมูลสำหรับแต่ละแท็บ (แก้ไขส่วนนี้เพื่อให้ dropdown filter ทำงาน)
   let dataToDisplay = [];
   if (activeTab === 'accountDocs') {
-    dataToDisplay = filterBySearch(accountDocs);
+    const filteredByStatus = filterStatus === 'ทั้งหมด'
+      ? accountDocs
+      : accountDocs.filter(item => item.status === filterStatus);
+    dataToDisplay = filterBySearch(filteredByStatus);
   } else if (activeTab === 'checkDocs') {
-    dataToDisplay = filterBySearch(checkDocs);
+    const filteredByStatus = filterStatus === 'ทั้งหมด'
+      ? checkDocs
+      : checkDocs.filter(item => item.status === filterStatus);
+    dataToDisplay = filterBySearch(filteredByStatus);
   } else if (activeTab === 'transactions') {
-    const filteredByStatus =
-      filterStatus === 'ทั้งหมด'
-        ? transactions
-        : transactions.filter(item => item.status === filterStatus);
+    const filteredByStatus = filterStatus === 'ทั้งหมด'
+      ? transactions
+      : transactions.filter(item => item.status === filterStatus);
     dataToDisplay = filterBySearch(filteredByStatus);
   }
 
@@ -157,32 +165,30 @@ const ListPage = () => {
     return `${day}/${month}/${year}`;
   };
 
-  // ฟังก์ชันเลื่อนช่วงวันที่ไป 2 สัปดาห์ ก่อนหน้า
+  // ฟังก์ชันเลื่อนช่วงวันที่ไป 1 เดือน ก่อนหน้า
   const handlePrevious = () => {
-    setStartDate(prev => {
-      const newStart = new Date(prev);
-      newStart.setDate(newStart.getDate() - 14);
-      return newStart;
-    });
-    setEndDate(prev => {
-      const newEnd = new Date(prev);
-      newEnd.setDate(newEnd.getDate() - 14);
-      return newEnd;
-    });
+    const newStart = new Date(startDate);
+    newStart.setMonth(newStart.getMonth() - 1);
+    const newEnd = new Date(endDate);
+    newEnd.setMonth(newEnd.getMonth() - 1);
+    setStartDate(newStart);
+    setEndDate(newEnd);
   };
 
-  // ฟังก์ชันเลื่อนช่วงวันที่ไป 2 สัปดาห์ ถัดไป
+  // ฟังก์ชันเลื่อนช่วงวันที่ไป 1 เดือน ถัดไป
+  // หากช่วงวันที่ใหม่ (newEnd) มากกว่าวันปัจจุบัน จะไม่เลื่อน
   const handleNext = () => {
-    setStartDate(prev => {
-      const newStart = new Date(prev);
-      newStart.setDate(newStart.getDate() + 14);
-      return newStart;
-    });
-    setEndDate(prev => {
-      const newEnd = new Date(prev);
-      newEnd.setDate(newEnd.getDate() + 14);
-      return newEnd;
-    });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const newStart = new Date(startDate);
+    newStart.setMonth(newStart.getMonth() + 1);
+    const newEnd = new Date(endDate);
+    newEnd.setMonth(newEnd.getMonth() + 1);
+    if (newEnd > today) {
+      return;
+    }
+    setStartDate(newStart);
+    setEndDate(newEnd);
   };
 
   return (
@@ -243,7 +249,7 @@ const ListPage = () => {
             >
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ width: '60px', height: '60px', backgroundColor: '#fff', borderRadius: '50%' }}></div>
-                <p style={{ fontSize: '18px',marginLeft: '10px' }}>admin#1234</p>
+                <p style={{ fontSize: '18px', marginLeft: '10px' }}>admin#1234</p>
               </div>
               <button
                 onClick={toggleMenu}
@@ -261,10 +267,10 @@ const ListPage = () => {
 
             {/* เนื้อหาหลักของ Sidebar */}
             <div style={{ flex: 1, padding: '20px' }}>
-              <p style={{ fontSize: '18px',cursor: 'pointer' }} onClick={() => { navigate('/statistics'); toggleMenu(); }}>
+              <p style={{ fontSize: '18px', cursor: 'pointer' }} onClick={() => { navigate('/statistics'); toggleMenu(); }}>
                 📊 สถิติ
               </p>
-              <p style={{ fontSize: '18px',cursor: 'pointer' }} onClick={() => { navigate('/list'); toggleMenu(); }}>
+              <p style={{ fontSize: '18px', cursor: 'pointer' }} onClick={() => { navigate('/list'); toggleMenu(); }}>
                 📋 รายชื่อ
               </p>
             </div>
@@ -377,14 +383,14 @@ const ListPage = () => {
               justifyContent: 'flex-end',
             }}
           >
-            <button onClick={handlePrevious} style={{ marginRight: '10px',border: 'none'}}>
-            ◀
+            <button onClick={handlePrevious} style={{ marginRight: '10px', border: 'none' }}>
+              ◀
             </button>
             <p style={{ margin: 0, fontSize: '14px' }}>
               วันที่ {formatDate(startDate)} - {formatDate(endDate)}
             </p>
-            <button onClick={handleNext} style={{ marginLeft: '10px',border: 'none' }}>
-             ▶
+            <button onClick={handleNext} style={{ marginLeft: '10px', border: 'none' }}>
+              ▶
             </button>
           </div>
 
